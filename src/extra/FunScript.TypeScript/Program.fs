@@ -257,6 +257,7 @@ let uploadPackage tempDir key version moduleName assLoc deps =
 open System.Threading
 open System.Collections.Concurrent
 
+
 [<EntryPoint>]
 let main args =
     try
@@ -270,8 +271,16 @@ let main args =
             | _ -> None, None
         let zipUri = defaultArg zipUri "https://github.com/borisyankov/DefinitelyTyped/archive/master.zip"
 
-        downloadTypesZip tempDir zipUri
-        |> generateAssemblies outDir (fun moduleName location dependencies -> 
+        let files = 
+            downloadTypesZip tempDir zipUri
+            |> List.filter (fun (f,_,_) -> 
+                not <| f.Contains "easyscroller.d.ts" &&
+                not <| f.Contains "scroller.d.ts"
+            )
+
+
+
+        files |> generateAssemblies outDir (fun moduleName location dependencies -> 
             match nugetKey with
             | None -> true
             | Some(version, key) ->

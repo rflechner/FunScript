@@ -1,6 +1,12 @@
 ﻿#if INTERACTIVE
-#r "..\ThirdParty\FParsecCS.dll"
-#r "..\ThirdParty\FParsec.dll"
+
+#I "../../../packages/FParsec/lib/net40-client"
+#r "FParsecCS.dll"
+#r "FParsec.dll"
+
+#load "AST.fs"
+
+open FunScript.TypeScript.AST
 #else
 module internal FunScript.TypeScript.Parser
 open AST
@@ -466,11 +472,11 @@ let commonAmbientElementDeclaration =
         |>> AmbientEnumDeclaration
     ]
 
-
 let exportedness =
     choice [
-        keywordReturn_ws "export" true
-        preturn false
+        attempt(str_ws "export" >>. str_ws "default" |>> (fun _ -> Exporting true))
+        keywordReturn_ws "export" (Exporting false)
+        preturn NotExporting
     ]
 
 let ambientModuleElement, ambientModuleElementRef = createParserForwardedToRef()
@@ -478,7 +484,6 @@ let ambientModuleElement, ambientModuleElementRef = createParserForwardedToRef()
 let ambientModuleDeclaration =
     keyword_ws "module" >>. entityName 
     .>>. between (str_ws "{") (str_ws "}") (many ambientModuleElement)
-    
 
 do  ambientModuleElementRef :=
     choice_attempt [
@@ -493,6 +498,9 @@ do  ambientModuleElementRef :=
 
         exportedness .>>. importDeclaration .>> opt (str_ws ";")
         |>> ImportDeclarationElement
+
+        exportedness .>>. identifier .>> opt (str_ws ";")
+        |>> fun (Exporting true, n) -> ExporDefaultModule n
     ]
 
 let ambientExternalModuleElement =
@@ -562,6 +570,18 @@ let parseDeclarationsFile str =
 //let lib = System.IO.File.ReadAllText(__SOURCE_DIRECTORY__ + @"\..\Examples\Typings\d3.d.ts")
 //let lib = System.IO.File.ReadAllText(__SOURCE_DIRECTORY__ + @"\..\Examples\Typings\ember.d.ts")
 //do  test declarationsFile lib
+
+//let lib = System.IO.File.ReadAllText(@"D:\Types\DefinitelyTyped-master\scroller\scroller.d.ts")
+//let lib = System.IO.File.ReadAllText(@"D:\Types\DefinitelyTyped-master\scroller\easyscroller.d.ts")
+
+do test declarationsFile <| System.IO.File.ReadAllText(@"D:\Types\DefinitelyTyped-master\abs\abs.d.ts")
+//do test declarationsFile <| System.IO.File.ReadAllText(@"D:\Types\DefinitelyTyped-master\onsenui\onsenui.d.ts")
+
+//open System.IO
+//for lib in Directory.EnumerateFiles(@"D:\Types\DefinitelyTyped-master", "*.d.ts", SearchOption.AllDirectories) |> Seq.toList do
+//    test declarationsFile lib
+
+//test exportedness "export default"
 
 let tryOut() =
     test declarationsFile """

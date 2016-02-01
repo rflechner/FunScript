@@ -1,12 +1,13 @@
-﻿#if INTERACTIVE
-#else
-module FunScript.TypeScript.AST
-#endif
+﻿module FunScript.TypeScript.AST
 
 type Identifier = string
 type IsOptional = bool
 type IsStatic = bool
-type IsExport = bool
+//type IsExport = bool
+
+type IsExport =
+    | Exporting of asDefault:bool
+    | NotExporting
 
 type EntityName = 
     /// IdentifierPath: Identifier | IdentifierPath . Identifier
@@ -237,6 +238,11 @@ type AmbientModuleElement =
     | InterfaceDeclarationElement of IsExport * InterfaceDeclaration
     | AmbientModuleDeclarationElement of IsExport * EntityName * AmbientModuleElement list
     | ImportDeclarationElement of IsExport * ImportDeclaration
+    | ExporDefaultModule of Identifier
+
+// https://github.com/Microsoft/TypeScript/blob/master/doc/spec.md#11342-export-default-declarations
+//type ExportDefaultDeclarationElement =
+//    | ExporDefaultModule of Identifier
 
 /// AmbientExternalModuleBody: AmbientExternalModuleElements[opt]
 /// AmbientExternalModuleElements: AmbientExternalModuleElement | AmbientExternalModuleElements AmbientExternalModuleElement
