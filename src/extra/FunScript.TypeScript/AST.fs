@@ -117,6 +117,7 @@ and Type =
     | Reference of TypeReference
     | Query of TypeQuery
     | Literal of TypeLiteral
+    | UnionType of Type list
 
 and TypeAnnotation =
     /// TypeAnnotation: : Type

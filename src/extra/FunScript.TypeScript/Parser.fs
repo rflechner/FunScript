@@ -181,11 +181,15 @@ let typeArgs =
         preturn []
     ]
 
+let unionType = 
+  sepBy1 typeSpec (str_ws "|")
+  |>> UnionType
+
 let entityName =
     sepBy1 identifier (str_ws ".")
     |>> EntityName
 
-do  typeReferenceRef := entityName .>>. typeArgs |>> TypeReference
+do typeReferenceRef := entityName .>>. typeArgs |>> TypeReference
 
 let interfaceExtendsClause =
     choice [
@@ -216,7 +220,12 @@ let predefinedType =
     ]
 
 let typeAnnotation =
-    str_ws ":" >>. typeSpec |>> TypeAnnotation
+    str_ws ":" >>.
+      (choice [
+        unionType
+        typeSpec 
+      ] |>> TypeAnnotation)
+//    str_ws ":" >>. typeSpec |>> TypeAnnotation
 
 let publicOrPrivate =
     choice [
@@ -231,7 +240,6 @@ let requiredParameter =
         opt publicOrPrivate .>>. identifier .>>. opt typeAnnotation
         |>> (fun ((pp, id), t) -> VariableParameter(pp, id, t))
     ]
-    
 
 let literalValue =
     choice [
@@ -582,15 +590,32 @@ do test declarationsFile
 }"""
 
 do test declarationsFile 
-    <| """interface JQueryGenericPromise<T> {
-    //then<U>(doneFilter: (value?: T, ...values: any[]) => U|JQueryPromise<U>, failFilter?: (...reasons: any[]) => any, progressFilter?: (...progression: any[]) => any): JQueryPromise<U>;
-    always(alwaysCallback1?: JQueryPromiseCallback<any>|JQueryPromiseCallback<any>[], ...alwaysCallbacksN: Array<JQueryPromiseCallback<any>|JQueryPromiseCallback<any>[]>): JQueryPromise<T>;
-    //then(doneFilter: (value?: T, ...values: any[]) => void, failFilter?: (...reasons: any[]) => any, progressFilter?: (...progression: any[]) => any): JQueryPromise<void>;
+  <| """interface JQueryGenericPromise<T> {
+  then<U>(doneFilter: (value?: T, ...values: any[]) => U|JQueryPromise<U>, failFilter?: (...reasons: any[]) => any, progressFilter?: (...progression: any[]) => any): JQueryPromise<U>;
+  //always(alwaysCallback1?: JQueryPromiseCallback<any>|JQueryPromiseCallback<any>[], ...alwaysCallbacksN: Array<JQueryPromiseCallback<any>|JQueryPromiseCallback<any>[]>): JQueryPromise<T>;
+
+  always(alwaysCallback1?: JQueryPromiseCallback<any>, ...v2: Array<int>): JQueryPromise<T>;
+
+  //then(doneFilter: (value?: T, ...values: any[]) => void, failFilter?: (...reasons: any[]) => any, progressFilter?: (...progression: any[]) => any): JQueryPromise<void>;
 }
 """
 
 
-do test declarationsFile <| System.IO.File.ReadAllText(@"D:\Types\DefinitelyTyped-master\jquery\jquery.d.ts")
+do test typeSpec
+  <| "string"
+
+do test unionType
+  <| "string|boolean|JQueryPromiseCallback<any>"
+
+do test declarationsFile 
+  <| """interface console {
+  commandLine(args: string|boolean): void;
+}
+"""
+
+
+
+//do test declarationsFile <| System.IO.File.ReadAllText(@"D:\Types\DefinitelyTyped-master\jquery\jquery.d.ts")
 //do test declarationsFile <| System.IO.File.ReadAllText(@"D:\Types\DefinitelyTyped-master\abs\abs.d.ts")
 //do test declarationsFile <| System.IO.File.ReadAllText(@"D:\Types\DefinitelyTyped-master\onsenui\onsenui.d.ts")
 
