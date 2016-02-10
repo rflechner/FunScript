@@ -574,7 +574,24 @@ let parseDeclarationsFile str =
 //let lib = System.IO.File.ReadAllText(@"D:\Types\DefinitelyTyped-master\scroller\scroller.d.ts")
 //let lib = System.IO.File.ReadAllText(@"D:\Types\DefinitelyTyped-master\scroller\easyscroller.d.ts")
 
-do test declarationsFile <| System.IO.File.ReadAllText(@"D:\Types\DefinitelyTyped-master\abs\abs.d.ts")
+
+
+do test declarationsFile 
+    <| """interface JQueryPromiseCallback<T> {
+    (value?: T, ...args: any[]): void;
+}"""
+
+do test declarationsFile 
+    <| """interface JQueryGenericPromise<T> {
+    //then<U>(doneFilter: (value?: T, ...values: any[]) => U|JQueryPromise<U>, failFilter?: (...reasons: any[]) => any, progressFilter?: (...progression: any[]) => any): JQueryPromise<U>;
+    always(alwaysCallback1?: JQueryPromiseCallback<any>|JQueryPromiseCallback<any>[], ...alwaysCallbacksN: Array<JQueryPromiseCallback<any>|JQueryPromiseCallback<any>[]>): JQueryPromise<T>;
+    //then(doneFilter: (value?: T, ...values: any[]) => void, failFilter?: (...reasons: any[]) => any, progressFilter?: (...progression: any[]) => any): JQueryPromise<void>;
+}
+"""
+
+
+do test declarationsFile <| System.IO.File.ReadAllText(@"D:\Types\DefinitelyTyped-master\jquery\jquery.d.ts")
+//do test declarationsFile <| System.IO.File.ReadAllText(@"D:\Types\DefinitelyTyped-master\abs\abs.d.ts")
 //do test declarationsFile <| System.IO.File.ReadAllText(@"D:\Types\DefinitelyTyped-master\onsenui\onsenui.d.ts")
 
 //open System.IO
