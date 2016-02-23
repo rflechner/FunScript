@@ -181,10 +181,6 @@ let typeArgs =
         preturn []
     ]
 
-let unionType = 
-  sepBy1 typeSpec (str_ws "|")
-  |>> UnionType
-
 let entityName =
     sepBy1 identifier (str_ws ".")
     |>> EntityName
@@ -219,13 +215,24 @@ let predefinedType =
         keywordReturn_ws "void" Void
     ]
 
+
+//let unionType = 
+//  sepBy1 typeSpec (str_ws "|")
+//  |>> UnionType
+
 let typeAnnotation =
-    str_ws ":" >>.
-      (choice [
-        unionType
-        typeSpec 
-      ] |>> TypeAnnotation)
-//    str_ws ":" >>. typeSpec |>> TypeAnnotation
+//    str_ws ":" >>.
+//      (choice [
+//        typeSpec 
+//        unionType
+//      ] |>> TypeAnnotation)
+    str_ws ":" >>. typeSpec |>> TypeAnnotation
+//    let up = sepBy1 typeSpec (str_ws "|")
+//    str_ws ":" >>. up 
+//    |>> fun types ->
+//          match types with
+//          | [t] -> TypeAnnotation t
+//          | _ -> TypeAnnotation (UnionType types)
 
 let publicOrPrivate =
     choice [
@@ -344,8 +351,29 @@ let typeLiteral =
         typeQuery |>> Query |> followedByArraySig |> prime
     ]
 
+let sepByMoreThan1 p sep = 
+  Inline.SepBy((fun x -> [x]), (fun xs _ x -> x::xs), List.rev, p, sep)
+
+let typeUnion = 
+  let us = typeSpec .>> str_ws "|"
+  let bu = (many us)
+  let ut = 
+    choice [
+      predefinedType |>> Predefined
+      typeReference |>> Reference
+    ]
+  //sepBy1 typeSpec (str_ws "|")
+  //pipe2 bu ut (fun r a -> UnionType(a::r))
+  ut
+
 /// Note: rearranged due to indirect left recursion!
-do  typeSpecRef :=
+do typeSpecRef :=
+//    let up = sepBy1 typeSpec (str_ws "|")
+//    str_ws ":" >>. up 
+//    |>> fun types ->
+//          match types with
+//          | [t] -> TypeAnnotation t
+//          | _ -> TypeAnnotation (UnionType types)
         choice_attempt [
             typeLiteral |>> Literal
             typeQuery |>> Query
@@ -600,16 +628,28 @@ do test declarationsFile
 }
 """
 
+do test typeUnion
+  <| "string|boolean"
 
-do test typeSpec
+do test typeUnion
+  <| "string|boolean|JQueryPromiseCallback<any>|"
+
+do test typeUnion
+  <| "string|"
+  
+do test typeUnion
   <| "string"
-
-do test unionType
-  <| "string|boolean|JQueryPromiseCallback<any>"
 
 do test declarationsFile 
   <| """interface console {
-  commandLine(args: string|boolean): void;
+  function commandLine(args: string|boolean): void;
+}
+"""
+
+
+do test declarationsFile 
+  <| """interface console {
+  function Abs(input: string): string;
 }
 """
 

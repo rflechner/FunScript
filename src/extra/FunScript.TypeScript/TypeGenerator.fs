@@ -132,12 +132,17 @@ module private FFIMapping =
 
     let rec typeReferenceToTypeRef k parentType (TypeReference(EntityName xs, ys)) =
         TypeRef(xs |> List.rev, ys |> List.map (typeToTypeRef k parentType))
-
+    and typesToTypeRefs k parentType l =
+        let typeRefs = l |> List.map (typeToTypeRef k parentType)
+        typeRefs
     and typeToTypeRef k parentType = function
         | Predefined x -> predefinedTypeToTypeRef x
         | Reference x -> typeReferenceToTypeRef k parentType x
         | Query _ -> predefinedTypeToTypeRef Any (* TODO *)
         | Literal x -> literalTypeToTypeRef k parentType x
+        | UnionType l -> 
+          let n = sprintf "UnionType_%d" System.DateTime.UtcNow.Ticks
+          TypeRef([n], typesToTypeRefs k parentType l)
 
     and literalTypeToTypeRef k parentType = function
         | LiteralObjectType x -> objectTypeToTypeRef k parentType x
