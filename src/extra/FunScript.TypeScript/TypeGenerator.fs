@@ -116,6 +116,10 @@ module private FFIMapping =
     let index = ref 0
     let getIndex() = incr index; !index
 
+    let convertExport = function
+        | NotExporting -> false
+        | Exporting _ -> true
+
     let predefinedTypeToTypeRef x =
         let name =
             match x with
@@ -351,7 +355,7 @@ module private FFIMapping =
         | AmbientModuleElement(_, x) ->
             fromCommonAmbientElement k ns x
         | ImportDeclarationElement(y, x) -> 
-            fromImportDeclaration k ns x y
+            fromImportDeclaration k ns x (convertExport y)
         | InterfaceDeclarationElement(_, x) ->
             fromInterface k ns x
 
@@ -363,7 +367,8 @@ module private FFIMapping =
 
     and fromAmbientExternalModuleElement k ns = function  
         | ExternalExportAssignment x -> fromExportAssignment k ns x
-        | ExternalAbientImportDeclaration(y, x) -> fromExternalImportAssignment k ns x y
+        | ExternalAbientImportDeclaration(y, x) -> 
+          fromExternalImportAssignment k ns x (convertExport y)
         | ExternalAmbientModuleElement x -> fromAmbientModuleElement k ns x 
 
     and fromAmbientDeclaration k ns = function
@@ -378,7 +383,8 @@ module private FFIMapping =
         | RootExportAssignment _ -> printfn "[WARN] Ignored root level export assignment."
         | RootImportDeclaration _ 
         | RootReference _ -> ()
-        | RootExternalImportDeclaration(y, x) -> fromExternalImportAssignment k [] x y
+        | RootExternalImportDeclaration(y, x) -> 
+          fromExternalImportAssignment k [] x (convertExport y)
         | RootInterfaceDeclaration(_, x) -> fromInterface k [] x
         | RootAmbientDeclaration(_, x) -> fromAmbientDeclaration k [] x
 
